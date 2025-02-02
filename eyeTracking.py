@@ -1,8 +1,13 @@
 import cv2
+import numpy as np
 
 detector = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
 cap = cv2.VideoCapture(0)
+
+measuring = True
+measurements = []
+measurementCycles = 30
 
 while (True):
     ret, img = cap.read()
@@ -13,14 +18,20 @@ while (True):
         roi_gray = gray[y:y + h, x:x + w]
         roi_color = img[y:y + h, x:x + w]
         eyes = eye_cascade.detectMultiScale(roi_gray,minNeighbors=15)
-        try:
-            ex1, ey1, ew1, eh1 = eyes[0]
-            ex2, ey2, ew2, eh2 = eyes[1]
+        if(measuring):
+            try:
+                ex1, ey1, ew1, eh1 = eyes[0]
+                ex2, ey2, ew2, eh2 = eyes[1]
 
-            print(abs((ex1+ew1)/2-(ex2+ew2)/2))
-            
-        except:
-            print("Please stay still & take off GLASSES PRAYGE")
+                measurements.append(abs((ex1+ew1)/2-(ex2+ew2)/2))
+
+                if(len(measurements)>measurementCycles):
+                    measuring = False
+                    print(np.mean(measurements))
+
+            except:
+                print("Please stay still & take off GLASSES PRAYGE")
+                measurements = []
         
         for (ex, ey, ew, eh) in eyes:
             cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2)
